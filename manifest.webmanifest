@@ -1,0 +1,9 @@
+{
+  "name": "Lot 114R Site Map",
+  "short_name": "Lot 114R",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#12140f",
+  "theme_color": "#12140f"
+}
