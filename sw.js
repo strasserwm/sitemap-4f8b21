@@ -1,5 +1,5 @@
 /* Cache the field map so it opens with no signal. Bump CACHE to force a refresh. */
-const CACHE = "lot114r-v3";
+const CACHE = "lot114r-v4";
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
