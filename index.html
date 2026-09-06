@@ -880,8 +880,10 @@ const map = L.map("map",{zoomControl:false, attributionControl:false,
 // context first so it sits underneath the close-in imagery
 const wideL   = L.imageOverlay(DATA.wide,   WIDE,   {interactive:false}).addTo(map);
 const aerial  = L.imageOverlay(DATA.aerial, BOUNDS, {interactive:false}).addTo(map);
-const platL   = L.imageOverlay(DATA.plat,   BOUNDS, {opacity:.8, interactive:false}).addTo(map);
-const flagsL  = L.imageOverlay(DATA.flags,  BOUNDS, {opacity:.7, interactive:false});
+// the trip is about finding FLAGS, so the flag sheet is on by default and the
+// plat lettering is faded to context. Both still toggle.
+const platL   = L.imageOverlay(DATA.plat,   BOUNDS, {opacity:.32, interactive:false}).addTo(map);
+const flagsL  = L.imageOverlay(DATA.flags,  BOUNDS, {opacity:.95, interactive:false}).addTo(map);
 map.fitBounds(BOUNDS, {padding:[6,6]});
 // deliberately NOT locked to the lot: you need to be able to see yourself
 // approaching from off the property.
@@ -1115,7 +1117,15 @@ let fixes=0, lastErr=null, watchId=null;
 
 function diag(){
   const framed = (()=>{ try{ return window.self!==window.top; }catch(e){ return true; } })();
+  const ua = navigator.userAgent;
+  const ios = /iPhone|iPad|iPod/.test(ua);
+  // a real Safari tab reports Version/x.y ... Safari/. An in-app web view does not,
+  // and an in-app web view is NOT granted location even on a normal https page.
+  const inApp = ios && !/Version\/[\d.]+.*Safari/.test(ua);
   const bits=[
+    "opened in: "+(inApp ? "an IN-APP browser — location is blocked here"
+                         : (ios ? "a real Safari tab" : "a desktop browser")),
+    "page: "+location.origin,
     "in a frame: "+(framed?"yes":"no"),
     "secure page: "+(isSecureContext?"yes":"NO — location needs https"),
     "geolocation API: "+(navigator.geolocation?"present":"MISSING"),
@@ -1160,7 +1170,7 @@ function startLocating(){
   const bad = err=>{
     lastErr=err; diag(); locbar.hidden=false;
     locMsg.innerHTML = err.code===1
-      ? "<b>Location was refused.</b> On iPhone check Settings › Privacy &amp; Security › Location Services is on, and Settings › Safari › Location is Ask or Allow. Then tap Find me again."
+      ? "<b>Location was refused.</b> Two things cause this. <b>1.</b> If you opened this link from inside another app (Claude, Messages, Mail), that app's built-in browser blocks location &mdash; tap the share or &hellip; icon and choose <b>Open in Safari</b>. <b>2.</b> Otherwise check Settings &rsaquo; Privacy &amp; Security &rsaquo; Location Services is on, and Settings &rsaquo; Safari &rsaquo; Location is Ask. Then tap Find me again."
       : err.code===2
       ? "<b>Your phone can’t get a position right now.</b> Step into open sky and tap Find me again."
       : "<b>Timed out waiting for a fix.</b> Tap Find me to try again.";
