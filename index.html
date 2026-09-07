@@ -859,7 +859,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 </div>
 
 <div class="locbar" id="locbar">
-  <div id="locMsg"><b>Tap “Find me” to show your location.</b> iPhone will ask permission — say Allow.</div>
+  <div id="locMsg"><b>Tap “Find me” to show your location.</b> iPhone will ask permission — say Allow.<br><b>✕ at the top of this page?</b> You are in an app’s built-in browser and location will refuse — tap the compass icon at the bottom right to open in Safari first.</div>
   <details class="diagWrap"><summary>Why isn’t it working?</summary><div class="diag" id="locDiag"></div></details>
   <button class="btn primary" id="findMe" style="width:100%">Find me</button>
 </div>
@@ -1146,12 +1146,16 @@ function diag(){
   const framed = (()=>{ try{ return window.self!==window.top; }catch(e){ return true; } })();
   const ua = navigator.userAgent;
   const ios = /iPhone|iPad|iPod/.test(ua);
-  // a real Safari tab reports Version/x.y ... Safari/. An in-app web view does not,
-  // and an in-app web view is NOT granted location even on a normal https page.
-  const inApp = ios && !/Version\/[\d.]+.*Safari/.test(ua);
+  // ⛔ DISPROVED 2026-09-06: Apple's SFSafariViewController (the in-app browser with
+  // an ✕ at the top) sends an IDENTICAL user agent to real Safari, so this test does
+  // NOT work and used to report "a real Safari tab" while location was blocked.
+  // There is no reliable script-side detection. Tell the user the visual tell instead.
+  const inApp = false;
   const bits=[
-    "opened in: "+(inApp ? "an IN-APP browser — location is blocked here"
-                         : (ios ? "a real Safari tab" : "a desktop browser")),
+    /* ⚠️ Apple's in-app browser (SFSafariViewController) reports an IDENTICAL user
+       agent to real Safari, so this CANNOT be detected in code. Claiming "a real
+       Safari tab" gave false comfort and cost a trip. Describe the tell instead. */
+    "opened in: "+(ios ? "iPhone — see the note below" : "a desktop browser"),
     "page: "+location.origin,
     "in a frame: "+(framed?"yes":"no"),
     "secure page: "+(isSecureContext?"yes":"NO — location needs https"),
@@ -1199,7 +1203,7 @@ function startLocating(){
   const bad = err=>{
     lastErr=err; diag(); locbar.hidden=false;
     locMsg.innerHTML = err.code===1
-      ? "<b>Location was refused.</b> Two things cause this. <b>1.</b> If you opened this link from inside another app (Claude, Messages, Mail), that app's built-in browser blocks location &mdash; tap the share or &hellip; icon and choose <b>Open in Safari</b>. <b>2.</b> Otherwise check Settings &rsaquo; Privacy &amp; Security &rsaquo; Location Services is on, and Settings &rsaquo; Safari &rsaquo; Location is Ask. Then tap Find me again."
+      ? "<b>Location was refused.</b> <b>Is there an ✕ at the top of this page?</b> Then you are in an app's built-in browser (Claude, Messages, Mail), which blocks location however the page is set up. <b>Tap the compass icon at the bottom right to open in Safari</b>, then tap Find me. If you are already in Safari proper, check Settings &rsaquo; Privacy &amp; Security &rsaquo; Location Services is on, Safari Websites is <i>While Using</i>, and Precise Location is on."
       : err.code===2
       ? "<b>Your phone can’t get a position right now.</b> Step into open sky and tap Find me again."
       : "<b>Timed out waiting for a fix.</b> Tap Find me to try again.";
